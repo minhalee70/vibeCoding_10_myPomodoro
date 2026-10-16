@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusFlow | 포모도로 스마트 타이머</title>
+  <meta name="description" content="25분 집중과 5분 휴식, 앰비언트 백색소음, 원형 프로그레스 링을 제공하는 프리미엄 포모도로 타이머">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="focus-theme">
+  <!-- Dynamic Ambient Background Particles/Glow -->
+  <div class="ambient-glow glow-primary" aria-hidden="true"></div>
+  <div class="ambient-glow glow-secondary" aria-hidden="true"></div>
+
+  <main class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-icon">⏳</span>
+        <h1 class="brand-title">FocusFlow</h1>
+      </div>
+
+      <!-- Session Completed Counter Badge -->
+      <div class="session-tracker" id="sessionTracker" title="오늘 완료한 집중 세션">
+        <span class="session-icon" id="sessionIcon">🍅</span>
+        <span class="session-label">완료 세션:</span>
+        <span class="session-count-number" id="sessionCount">0</span>
+        <button id="resetSessionBtn" class="icon-btn-tiny" title="세션 카운트 초기화" aria-label="세션 카운트 초기화">↺</button>
+      </div>
+    </header>
+
+    <!-- Main Timer Card -->
+    <section class="timer-card">
+      <!-- Mode Badges -->
+      <div class="mode-indicator-wrap">
+        <div class="mode-badge" id="modeBadge">
+          <span class="badge-dot"></span>
+          <span class="badge-text" id="modeText">🎯 집중 시간</span>
+        </div>
+      </div>
+
+      <!-- Circular Timer Display -->
+      <div class="progress-ring-container" id="timerRingWrap">
+        <svg class="progress-ring" viewBox="0 0 320 320" width="300" height="300">
+          <defs>
+            <!-- Focus Gradient -->
+            <linearGradient id="focusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8b5cf6" />
+              <stop offset="50%" stop-color="#ec4899" />
+              <stop offset="100%" stop-color="#f43f5e" />
+            </linearGradient>
+            <!-- Break Gradient -->
+            <linearGradient id="breakGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06b6d4" />
+              <stop offset="50%" stop-color="#10b981" />
+              <stop offset="100%" stop-color="#34d399" />
+            </linearGradient>
+            <!-- Drop Shadow Filter for Ring Glow -->
+            <filter id="ringGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Background Track -->
+          <circle
+            class="progress-ring-bg"
+            cx="160"
+            cy="160"
+            r="136"
+            stroke-width="12"
+          />
+
+          <!-- Animated Progress Circle -->
+          <circle
+            id="progressRingCircle"
+            class="progress-ring-bar"
+            cx="160"
+            cy="160"
+            r="136"
+            stroke-width="12"
+            filter="url(#ringGlow)"
+          />
+        </svg>
+
+        <!-- Time & Status Overlay -->
+        <div class="timer-center-content">
+          <div class="timer-display" id="timeDisplay" aria-live="polite">25:00</div>
+          <div class="timer-sub-status" id="timerSubStatus">준비 완료</div>
+        </div>
+      </div>
+
+      <!-- Primary Control Buttons -->
+      <div class="timer-controls">
+        <button id="startBtn" class="control-btn btn-primary" aria-label="타이머 시작">
+          <span class="btn-icon">▶</span>
+          <span class="btn-label">시작</span>
+        </button>
+        <button id="pauseBtn" class="control-btn btn-secondary" aria-label="타이머 일시정지" disabled>
+          <span class="btn-icon">❚❚</span>
+          <span class="btn-label">일시정지</span>
+        </button>
+        <button id="resetBtn" class="control-btn btn-tertiary" aria-label="타이머 초기화">
+          <span class="btn-icon">↺</span>
+          <span class="btn-label">초기화</span>
+        </button>
+      </div>
+
+      <!-- Quick Mode Toggle Tabs (Manual Switch Option) -->
+      <div class="mode-switcher-bar">
+        <button id="switchFocusBtn" class="mode-tab-btn active" data-mode="focus">
+          집중 (25분)
+        </button>
+        <button id="switchBreakBtn" class="mode-tab-btn" data-mode="break">
+          휴식 (5분)
+        </button>
+      </div>
+    </section>
+
+    <!-- Soundscape / Ambient Noise Section -->
+    <section class="sound-card">
+      <div class="sound-header">
+        <div class="sound-title">
+          <span class="sound-icon">🎧</span>
+          <h2>백색소음 사운드스케이프</h2>
+        </div>
+        <div class="sound-status" id="soundStatusBadge">선택 안 함</div>
+      </div>
+
+      <!-- Ambient Sound Preset Buttons -->
+      <div class="sound-buttons-grid">
+        <button class="sound-pill-btn" data-sound="waves" id="soundWavesBtn">
+          <span class="sound-emoji">🌊</span>
+          <span class="sound-name">파도 소리</span>
+          <span class="sound-indicator"></span>
+        </button>
+        <button class="sound-pill-btn" data-sound="rain" id="soundRainBtn">
+          <span class="sound-emoji">🌧️</span>
+          <span class="sound-name">빗소리</span>
+          <span class="sound-indicator"></span>
+        </button>
+        <button class="sound-pill-btn" data-sound="birds" id="soundBirdsBtn">
+          <span class="sound-emoji">🐦</span>
+          <span class="sound-name">새소리</span>
+          <span class="sound-indicator"></span>
+        </button>
+      </div>
+
+      <!-- Volume & Mute Controls -->
+      <div class="volume-control-wrap">
+        <button id="muteBtn" class="mute-toggle-btn" aria-label="음소거 토글" title="음소거 (단축키 M)">
+          <span id="muteIcon">🔊</span>
+        </button>
+        <div class="slider-container">
+          <input
+            type="range"
+            id="volumeSlider"
+            min="0"
+            max="100"
+            value="60"
+            class="volume-slider"
+            aria-label="백색소음 음량 조절"
+          >
+          <div class="volume-level-label">
+            <span>볼륨</span>
+            <span id="volumeValue">60%</span>
+          </div>
+        </div>
+        <button id="testAlarmBtn" class="test-alarm-btn" title="알람음 미리듣기">
+          <span>🔔 알람음 테스트</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Footer with Shortcuts & Fast Test Option -->
+    <footer class="app-footer">
+      <div class="keyboard-hints">
+        <span><kbd>Space</kbd> 시작/일시정지</span>
+        <span><kbd>R</kbd> 초기화</span>
+        <span><kbd>M</kbd> 음소거</span>
+      </div>
+
+      <!-- Dev/Demo Quick Test Mode (25초 집중 / 5초 휴식) -->
+      <div class="test-mode-toggle">
+        <label class="switch-label">
+          <input type="checkbox" id="fastTestModeToggle">
+          <span class="slider-round"></span>
+          <span class="toggle-text">⚡ 빠른 시연 모드 (25초/5초)</span>
+        </label>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toastNotification" class="toast" aria-live="assertive"></div>
+
+  <!-- Audio and App Scripts -->
+  <script src="audio.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
